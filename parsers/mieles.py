@@ -2,8 +2,9 @@ import aiohttp
 import json
 import time
 import re
-from typing import Optional, List, Dict
+from typing import List, Dict
 import logging
+import urllib.parse
 
 # Предполагаем, что utils.py с normalize_text, remove_miele существует
 # (fetch не нужен, так как здесь прямой API вызов через aiohttp.ClientSession)
@@ -32,11 +33,9 @@ async def parse_mieles(original_title: str, search_query: str) -> List[Dict]:
         f"?storepartuid=118745354213"
         f"&recid=501398769"
         f"&c={c}"
-        f"&getparts=true"
-        f"&getoptions=true"
         f"&slice=1"
-        f"&filters%5Bstorepartuid%5D%5B0%5D=%D0%A5%D0%B8%D0%BC%D0%B8%D1%8F"
-        f"&size=100"
+        f"&filters%5Bquery%5D%5B0%5D={urllib.parse.quote_plus(search_query)}"
+        f"&size=52"
     )
     
     headers = {
@@ -167,24 +166,3 @@ async def parse_mieles(original_title: str, search_query: str) -> List[Dict]:
         except Exception as e:
             logger.error(f"Неожиданная ошибка при парсинге mieles.ru: {e}", exc_info=True)
             return []
-
-# Пример использования
-async def main():
-    results = await parse_mieles(
-        original_title="Картридж для очистки от накипи CM7", 
-        search_query="Картридж TwinDos" # Изменил search_query для примера, так как в mieles.ru есть TwinDos
-    )
-    
-    if results:
-        print("\nНайденные товары на Mieles:")
-        for item in results:
-            print(f"  Название: {item['title']}")
-            print(f"  Ссылка: {item['link']}")
-            print(f"  Цена: {item['price']}")
-            print("-" * 20)
-    else:
-        print("Товары не найдены или произошла ошибка.")
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
